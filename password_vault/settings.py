@@ -189,7 +189,9 @@ CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if not D
 
 from cryptography.fernet import Fernet
 
-ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
+# ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
+ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
+
 if not ENCRYPTION_KEY:
     raise ValueError(
         "❌ ENCRYPTION_KEY is missing! Add it to your .env file to avoid data decryption issues."
