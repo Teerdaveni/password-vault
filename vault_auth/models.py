@@ -74,9 +74,15 @@ class PasswordEntry(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'password_entries'
-        verbose_name = 'Password Entry'
-        verbose_name_plural = 'Password Entries'
+        # db_table = 'password_entries'
+        # verbose_name = 'Password Entry'
+        # verbose_name_plural = 'Password Entries'
+
+        # class Meta:
+        db_table = "vault_auth_user"
+        verbose_name = "User"
+        verbose_name_plural = "Users"
+
         ordering = ['-created_at']
     
     def __str__(self):
