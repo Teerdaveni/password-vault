@@ -404,7 +404,7 @@ class PasswordEntryViewPasswordAPIView(APIView):
 
         # Step 5: Return only required data
         return Response({
-            "site": entry.site_name,
+            "application": entry.application_name,
             "username": entry.username,
             "password": decrypted_password,
             "message": "Password access granted"
