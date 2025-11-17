@@ -209,63 +209,7 @@ class LogoutAPIView(APIView):
         )
 
 
-    # def post(self, request):
-    #     # Accept optional refresh token. If provided, attempt to blacklist it.
-    #     # If not provided, return 200 instructing the client to delete tokens
-    #     # locally (no server-side revocation available by default).
-    #     refresh_token = request.data.get('refresh')
-    #     if not refresh_token:
-    #         return Response({
-    #             'message': 'No refresh token provided. Client should delete access and refresh tokens locally.'
-    #         }, status=status.HTTP_200_OK)
-
-    #     try:
-    #         token = RefreshToken(refresh_token)
-    #         # Attempt to blacklist (requires simplejwt blacklist app)
-    #         token.blacklist()
-    #     except AttributeError:
-    #         # blacklist() not available because blacklist app not installed
-    #         return Response({
-    #             'message': 'Logout: token received but server blacklist not configured. Client should delete tokens.'
-    #         }, status=status.HTTP_200_OK)
-    #     except TokenError:
-    #         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
-
-
-# class PasswordEntryViewSet(viewsets.ModelViewSet):
-#     """ViewSet for managing password entries."""
     
-#     permission_classes = [IsAuthenticated]
-    
-#     def get_queryset(self):
-#         """Return password entries for the current user."""
-#         # Admins should be able to see all password entries in the system.
-#         # Regular users only see their own entries.
-#         if self.request.user and getattr(self.request.user, 'is_admin', False):
-#             return PasswordEntry.objects.all()
-#         return PasswordEntry.objects.filter(user=self.request.user)
-    
-#     def get_serializer_class(self):
-#         """Return appropriate serializer based on action."""
-#         if self.action == 'retrieve_with_password':
-#             return PasswordEntryDetailSerializer
-#         return PasswordEntrySerializer
-    
-#     def perform_create(self, serializer):
-#         """Create a password entry for the current user."""
-#         serializer.save(user=self.request.user)
-    
-#     def get_permissions(self):
-#         """Set permissions based on action."""
-#         if self.action == 'retrieve_with_password':
-#             # For viewing decrypted passwords we enforce explicit owner-only
-#             # checks inside the view. Do not grant admin blanket access here
-#             # so that only the requester/owner can view the decrypted value.
-#             return [IsAuthenticated()]
-#         return [IsAuthenticated()]
-
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -385,17 +329,20 @@ class PasswordRequestListCreateAPIView(APIView):
 
 
 
-# class PasswordEntryViewPasswordAPIView(APIView):
-#     """Allow either the owner or an approved requester to view decrypted password."""
-#     permission_classes = [IsAuthenticated]
+
+
+
+class PasswordEntryViewPasswordAPIView(APIView):
+    """Allow either the owner or an approved requester to view decrypted password."""
+    permission_classes = [IsAuthenticated]
 
     # def get(self, request, pk):
-    #     # Step 1 — Find password entry
-    #     entry = PasswordEntry.objects.select_related('user').filter(pk=pk).first()
+    #     # Step 1: Load password entry
+    #     entry = PasswordEntry.objects.filter(pk=pk).first()
     #     if not entry:
-    #         return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+    #         return Response({'error': 'Not found'}, status=404)
 
-    #     # Step 2 — Check if user is entry owner OR has an approved request
+    #     # Step 2: Check approved request for THIS user only
     #     active_request = PasswordRequest.objects.filter(
     #         password_entry=entry,
     #         requester=request.user,
@@ -403,32 +350,28 @@ class PasswordRequestListCreateAPIView(APIView):
     #         expires_at__gt=timezone.now()
     #     ).first()
 
-    #     if not (entry.user_id == request.user.id or active_request):
-    #         return Response({'error': 'You do not have permission to view this password.'},
-    #                         status=status.HTTP_403_FORBIDDEN)
+    #     if not active_request:
+    #         return Response(
+    #             {'error': 'You are not authorized to view this password.'},
+    #             status=403
+    #         )
 
-    #     # Step 3 — Ensure approved request is still active (not expired)
-    #     if active_request and active_request.expires_at <= timezone.now():
+    #     # Step 3: Expired?
+    #     if active_request.expires_at <= timezone.now():
     #         active_request.status = 'expired'
     #         active_request.save(update_fields=['status'])
-    #         return Response({'error': 'Your approval has expired.'}, status=status.HTTP_403_FORBIDDEN)
+    #         return Response({'error': 'Your approval has expired.'}, status=403)
 
-    #     # Step 4 — Log view for auditing
-    #     try:
-    #         PasswordViewLog.objects.create(password_entry=entry, viewer=request.user)
-    #     except Exception:
-    #         pass  # don’t block if logging fails
+    #     # Step 4: Decrypt password
+    #     decrypted_password = decrypt_password(entry.encrypted_password)
 
-    #     # Step 5 — Return decrypted data
-    #     serializer = PasswordEntryDetailSerializer(entry)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-# from utils import decrypt_password
-
-
-
-class PasswordEntryViewPasswordAPIView(APIView):
-    """Allow either the owner or an approved requester to view decrypted password."""
-    permission_classes = [IsAuthenticated]
+    #     # Step 5: Return only required data
+    #     return Response({
+    #         "site": entry.site_name,
+    #         "username": entry.username,
+    #         "password": decrypted_password,
+    #         "message": "Password access granted"
+    #     }, status=200)
 
     def get(self, request, pk):
         # Step 1: Load password entry
@@ -456,8 +399,8 @@ class PasswordEntryViewPasswordAPIView(APIView):
             active_request.save(update_fields=['status'])
             return Response({'error': 'Your approval has expired.'}, status=403)
 
-        # Step 4: Decrypt password
-        decrypted_password = decrypt_password(entry.encrypted_password)
+        # Step 4: Decrypt password correctly
+        decrypted_password = entry.get_password()
 
         # Step 5: Return only required data
         return Response({
@@ -466,6 +409,7 @@ class PasswordEntryViewPasswordAPIView(APIView):
             "password": decrypted_password,
             "message": "Password access granted"
         }, status=200)
+
 
 class PasswordRequestVerifyOTPAPIView(APIView):
     """
