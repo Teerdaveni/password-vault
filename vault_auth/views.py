@@ -90,50 +90,97 @@ def register(request):
 class LoginAPIView(APIView):
     permission_classes = [AllowAny]
 
+    # def post(self, request):
+    #     email = request.data.get("email")
+    #     password = request.data.get("password")
+
+    #     # 1️⃣ Missing email or password
+    #     if not email or not password:
+    #         return Response(
+    #             {"error": "Please provide email and password"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    #     # 2️⃣ Check if email exists
+    #     try:
+    #         user_obj = User.objects.get(email=email)
+    #     except User.DoesNotExist:
+    #         return Response(
+    #             {"error": "Invalid email"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    #     # 3️⃣ Password incorrect
+    #     if not user_obj.check_password(password):
+    #         return Response(
+    #             {"error": "Incorrect password"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    #     # 4️⃣ Check if user is active
+    #     if not user_obj.is_active:
+    #         return Response(
+    #             {"error": "User account is disabled"},
+    #             status=status.HTTP_401_UNAUTHORIZED
+    #         )
+
+    #     # 5️⃣ Generate JWT tokens
+    #     refresh = RefreshToken.for_user(user_obj)
+
+    #     return Response({
+    #         "user": UserSerializer(user_obj).data,
+    #         "tokens": {
+    #             "refresh": str(refresh),
+    #             "access": str(refresh.access_token),
+    #         }
+    #     })
+
     def post(self, request):
-        email = request.data.get("email")
+        # Normalize email (strip spaces + lowercase)
+        email = (request.data.get("email") or "").strip().lower()
         password = request.data.get("password")
 
-        # 1️⃣ Missing email or password
+        # 1️⃣ Missing inputs
         if not email or not password:
             return Response(
                 {"error": "Please provide email and password"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 2️⃣ Check if email exists
-        try:
-            user_obj = User.objects.get(email=email)
-        except User.DoesNotExist:
+        # 2️⃣ Look up user with case-insensitive query
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
             return Response(
                 {"error": "Invalid email"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 3️⃣ Password incorrect
-        if not user_obj.check_password(password):
+        # 3️⃣ Check password
+        if not user.check_password(password):
             return Response(
                 {"error": "Incorrect password"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 4️⃣ Check if user is active
-        if not user_obj.is_active:
+        # 4️⃣ Check if active
+        if not user.is_active:
             return Response(
                 {"error": "User account is disabled"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        # 5️⃣ Generate JWT tokens
-        refresh = RefreshToken.for_user(user_obj)
+        # 5️⃣ Generate tokens
+        refresh = RefreshToken.for_user(user)
 
         return Response({
-            "user": UserSerializer(user_obj).data,
+            "message": "Login successful",
+            "user": UserSerializer(user).data,
             "tokens": {
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             }
         })
+
 
 
 @api_view(['GET'])
