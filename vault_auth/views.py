@@ -592,3 +592,22 @@ def admin_dashboard(request):
         'total_passwords': total_passwords,
         'total_requests': total_requests,
     })
+
+
+from django.core.mail import send_mail
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from password_vault.settings import DEFAULT_FROM_EMAIL
+
+@api_view(["GET"])
+def test_email(request):
+    try:
+        send_mail(
+            subject="SendGrid Test Email",
+            message="This is a test email from Render using SendGrid!",
+            from_email=DEFAULT_FROM_EMAIL,  # uses DEFAULT_FROM_EMAIL
+            recipient_list=["teerdaveni@sriainfotech.com"],  # Replace
+        )
+        return Response({"message": "Email sent successfully!"})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)

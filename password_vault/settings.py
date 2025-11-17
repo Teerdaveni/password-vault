@@ -451,13 +451,22 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-# EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'teerdavenigedela@gmail.com'
-EMAIL_HOST_PASSWORD = 'vcig blpb lbdg sact'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# # EMAIL_USE_SSL = False
+# EMAIL_HOST_USER = 'teerdavenigedela@gmail.com'
+# EMAIL_HOST_PASSWORD = 'vcig blpb lbdg sact'
+
+EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+
+# Optional configs
+SENDGRID_SANDBOX_MODE_IN_DEBUG = False
+SENDGRID_ECHO_TO_STDOUT = False
+
+DEFAULT_FROM_EMAIL = "teerdavenigedela@gmail.com"
 
 
 import dj_database_url
