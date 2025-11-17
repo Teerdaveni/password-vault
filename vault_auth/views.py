@@ -594,24 +594,24 @@ def admin_dashboard(request):
     })
 
 
-from django.core.mail import send_mail
-from rest_framework.views import APIView
-from rest_framework.response import Response
+# from django.core.mail import send_mail
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
 
-class TestEmail(APIView):
-    authentication_classes = []   # optional for testing
-    permission_classes = []       # optional
+# class TestEmail(APIView):
+#     authentication_classes = []   # optional for testing
+#     permission_classes = []       # optional
 
-    def get(self, request):
-        try:
-            send_mail(
-                subject="Test Email from Password Vault",
-                message="This is a test email sent via SendGrid!",
-                from_email="teerdavenigedela@gmail.com",  # must match verified sender
-                recipient_list=["teerdaveni@sriainfotech.com"],
-                fail_silently=False
-            )
-            return Response({"message": "Email sent successfully!"})
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+#     def get(self, request):
+#         try:
+#             send_mail(
+#                 subject="Test Email from Password Vault",
+#                 message="This is a test email sent via SendGrid!",
+#                 from_email="teerdavenigedela@gmail.com",  # must match verified sender
+#                 recipient_list=["teerdaveni@sriainfotech.com"],
+#                 fail_silently=False
+#             )
+#             return Response({"message": "Email sent successfully!"})
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=500)
 

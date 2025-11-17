@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 # from . import LoginAPIView
 from . import views
 from .views import LoginAPIView
-from .views import TestEmail
+# from .views import TestEmail
 
 
 router = DefaultRouter()
@@ -40,6 +40,6 @@ urlpatterns = [
     # the endpoint is available at /api/passwords/<pk>/view-password/.
     path('passwords/<int:pk>/view-password/', views.PasswordEntryViewPasswordAPIView.as_view(), name='password-view-password'),
     path('', include(router.urls)),
-    path("test-email/", TestEmail.as_view()),
+    # path("test-email/", TestEmail.as_view()),
      
 ]
